@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Quản lý Deadline & Lịch học</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" aria-label="Thanh điều hướng">
+        <div class="brand">
+          <div class="brand__mark" aria-hidden="true">DL</div>
+          <div class="brand__text">
+            <div class="brand__title">Deadline</div>
+            <div class="brand__sub">Lịch học sinh viên</div>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <button class="nav__item is-active" data-view="dashboard" type="button">
+            <span class="nav__icon" aria-hidden="true">🏠</span>
+            <span class="nav__label">Tổng quan</span>
+          </button>
+          <button class="nav__item" data-view="deadlines" type="button">
+            <span class="nav__icon" aria-hidden="true">⏳</span>
+            <span class="nav__label">Deadline</span>
+          </button>
+          <button class="nav__item" data-view="schedule" type="button">
+            <span class="nav__icon" aria-hidden="true">📚</span>
+            <span class="nav__label">Lịch học</span>
+          </button>
+          <button class="nav__item" data-view="calendar" type="button">
+            <span class="nav__icon" aria-hidden="true">🗓️</span>
+            <span class="nav__label">Lịch tháng</span>
+          </button>
+        </nav>
+
+        <div class="sidebar__footer">
+          <div class="mini">
+            <div class="mini__row">
+              <span class="mini__label">Dữ liệu</span>
+              <span class="badge" id="storageBadge">localStorage</span>
+            </div>
+            <div class="mini__hint">Mọi thay đổi tự lưu trên máy.</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar__left">
+            <button class="iconBtn only-mobile" id="toggleSidebarBtn" type="button" aria-label="Mở/đóng menu">
+              ☰
+            </button>
+            <div>
+              <h1 class="title" id="viewTitle">Tổng quan</h1>
+              <div class="subtitle" id="viewSubtitle">Theo dõi deadline, lịch học và kế hoạch tuần.</div>
+            </div>
+          </div>
+
+          <div class="topbar__right">
+            <div class="segmented" role="tablist" aria-label="Tác vụ nhanh">
+              <button class="segmented__btn" id="quickAddDeadlineBtn" type="button">+ Deadline</button>
+              <button class="segmented__btn" id="quickAddClassBtn" type="button">+ Buổi học</button>
+            </div>
+            <button class="btn btn--ghost" id="exportBtn" type="button">Xuất JSON</button>
+            <button class="btn btn--danger" id="resetBtn" type="button" title="Xoá toàn bộ dữ liệu">
+              Reset
+            </button>
+          </div>
+        </header>
+
+        <section class="content">
+          <!-- DASHBOARD -->
+          <section class="view is-active" id="view-dashboard" data-view="dashboard">
+            <div class="grid">
+              <div class="card kpi">
+                <div class="kpi__label">Deadline sắp tới (7 ngày)</div>
+                <div class="kpi__value" id="kpiUpcoming">0</div>
+                <div class="kpi__meta" id="kpiUpcomingMeta">Không có deadline gần.</div>
+              </div>
+              <div class="card kpi">
+                <div class="kpi__label">Hôm nay</div>
+                <div class="kpi__value" id="kpiToday">0</div>
+                <div class="kpi__meta" id="kpiTodayMeta">Không có sự kiện hôm nay.</div>
+              </div>
+              <div class="card kpi">
+                <div class="kpi__label">Hoàn thành</div>
+                <div class="kpi__value" id="kpiDone">0%</div>
+                <div class="kpi__meta" id="kpiDoneMeta">Theo deadline trong 30 ngày.</div>
+              </div>
+            </div>
+
+            <div class="grid grid--2">
+              <div class="card">
+                <div class="card__head">
+                  <h2 class="card__title">Deadline gần nhất</h2>
+                  <button class="btn btn--primary" id="goDeadlinesBtn" type="button">Xem tất cả</button>
+                </div>
+                <div class="list" id="dashDeadlinesList" aria-label="Danh sách deadline gần nhất"></div>
+              </div>
+
+              <div class="card">
+                <div class="card__head">
+                  <h2 class="card__title">Lịch học hôm nay</h2>
+                  <button class="btn btn--primary" id="goScheduleBtn" type="button">Xem lịch tuần</button>
+                </div>
+                <div class="list" id="dashTodayClassesList" aria-label="Danh sách buổi học hôm nay"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- DEADLINES -->
+          <section class="view" id="view-deadlines" data-view="deadlines">
+            <div class="toolbar">
+              <div class="toolbar__left">
+                <div class="field">
+                  <label class="field__label" for="deadlineSearch">Tìm</label>
+                  <input class="input" id="deadlineSearch" placeholder="Môn học, tiêu đề, ghi chú..." />
+                </div>
+                <div class="field">
+                  <label class="field__label" for="deadlineFilter">Lọc</label>
+                  <select class="select" id="deadlineFilter">
+                    <option value="all">Tất cả</option>
+                    <option value="open">Chưa xong</option>
+                    <option value="done">Đã xong</option>
+                    <option value="overdue">Quá hạn</option>
+                    <option value="today">Hôm nay</option>
+                    <option value="7d">7 ngày tới</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="deadlineSort">Sắp xếp</label>
+                  <select class="select" id="deadlineSort">
+                    <option value="dueAsc">Hạn gần nhất</option>
+                    <option value="dueDesc">Hạn xa nhất</option>
+                    <option value="priorityDesc">Ưu tiên cao</option>
+                    <option value="createdDesc">Mới tạo</option>
+                  </select>
+                </div>
+              </div>
+              <div class="toolbar__right">
+                <button class="btn btn--primary" id="addDeadlineBtn" type="button">+ Thêm deadline</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <h2 class="card__title">Danh sách deadline</h2>
+                <div class="muted" id="deadlineCount">0 mục</div>
+              </div>
+              <div class="list" id="deadlinesList" aria-label="Danh sách deadline"></div>
+              <div class="empty" id="deadlinesEmpty" hidden>
+                <div class="empty__title">Chưa có deadline</div>
+                <div class="empty__desc">Thêm deadline đầu tiên để bắt đầu theo dõi.</div>
+                <button class="btn btn--primary" id="emptyAddDeadlineBtn" type="button">+ Thêm deadline</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- SCHEDULE -->
+          <section class="view" id="view-schedule" data-view="schedule">
+            <div class="toolbar">
+              <div class="toolbar__left">
+                <div class="field">
+                  <label class="field__label" for="scheduleWeek">Tuần</label>
+                  <input class="input" id="scheduleWeek" type="week" />
+                </div>
+                <div class="field">
+                  <label class="field__label" for="classSearch">Tìm</label>
+                  <input class="input" id="classSearch" placeholder="Môn học, phòng, ghi chú..." />
+                </div>
+              </div>
+              <div class="toolbar__right">
+                <button class="btn btn--primary" id="addClassBtn" type="button">+ Thêm buổi học</button>
+              </div>
+            </div>
+
+            <div class="grid grid--2">
+              <div class="card">
+                <div class="card__head">
+                  <h2 class="card__title">Lịch tuần</h2>
+                  <div class="muted" id="scheduleHint">Chọn tuần để xem chi tiết.</div>
+                </div>
+                <div class="week" id="weekView" aria-label="Lịch tuần"></div>
+              </div>
+
+              <div class="card">
+                <div class="card__head">
+                  <h2 class="card__title">Danh sách buổi học</h2>
+                  <div class="muted" id="classCount">0 mục</div>
+                </div>
+                <div class="list" id="classesList" aria-label="Danh sách buổi học"></div>
+                <div class="empty" id="classesEmpty" hidden>
+                  <div class="empty__title">Chưa có buổi học</div>
+                  <div class="empty__desc">Thêm lịch học để xem theo tuần và theo tháng.</div>
+                  <button class="btn btn--primary" id="emptyAddClassBtn" type="button">+ Thêm buổi học</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CALENDAR -->
+          <section class="view" id="view-calendar" data-view="calendar">
+            <div class="toolbar">
+              <div class="toolbar__left">
+                <button class="btn btn--ghost" id="calPrevBtn" type="button">←</button>
+                <div class="calTitle" id="calTitle">Tháng</div>
+                <button class="btn btn--ghost" id="calNextBtn" type="button">→</button>
+                <button class="btn btn--ghost" id="calTodayBtn" type="button">Hôm nay</button>
+              </div>
+              <div class="toolbar__right">
+                <span class="legend">
+                  <span class="legend__item"><span class="dot dot--deadline"></span>Deadline</span>
+                  <span class="legend__item"><span class="dot dot--class"></span>Buổi học</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid--2">
+              <div class="card">
+                <div class="card__head">
+                  <h2 class="card__title">Lịch tháng</h2>
+                  <div class="muted">Bấm vào ngày để xem chi tiết.</div>
+                </div>
+                <div class="calendar" id="calendarGrid" aria-label="Lưới lịch tháng"></div>
+              </div>
+
+              <div class="card">
+                <div class="card__head">
+                  <h2 class="card__title">Chi tiết ngày</h2>
+                  <div class="muted" id="dayDetailTitle">Chọn một ngày trên lịch.</div>
+                </div>
+                <div class="list" id="dayDetailList" aria-label="Danh sách sự kiện theo ngày"></div>
+                <div class="empty" id="dayDetailEmpty" hidden>
+                  <div class="empty__title">Không có sự kiện</div>
+                  <div class="empty__desc">Ngày này chưa có deadline hay buổi học.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <!-- MODAL -->
+    <dialog class="modal" id="editorModal">
+      <form class="modal__inner" id="editorForm" method="dialog">
+        <div class="modal__head">
+          <div>
+            <div class="modal__title" id="modalTitle">Thêm</div>
+            <div class="modal__subtitle" id="modalSubtitle">Điền thông tin rồi bấm Lưu.</div>
+          </div>
+          <button class="iconBtn" type="button" id="closeModalBtn" aria-label="Đóng">✕</button>
+        </div>
+
+        <div class="chips" role="tablist" aria-label="Chọn loại">
+          <button class="chip is-active" type="button" data-kind="deadline">Deadline</button>
+          <button class="chip" type="button" data-kind="class">Buổi học</button>
+        </div>
+
+        <input type="hidden" id="editorKind" value="deadline" />
+        <input type="hidden" id="editorId" value="" />
+
+        <div class="modal__body">
+          <div class="grid grid--2">
+            <div class="field">
+              <label class="field__label" for="fTitle">Tiêu đề</label>
+              <input class="input" id="fTitle" required placeholder="VD: Nộp báo cáo giữa kỳ" />
+            </div>
+            <div class="field">
+              <label class="field__label" for="fCourse">Môn học</label>
+              <input class="input" id="fCourse" placeholder="VD: Cấu trúc dữ liệu" />
+            </div>
+          </div>
+
+          <div class="grid grid--2" id="deadlineFields">
+            <div class="field">
+              <label class="field__label" for="fDue">Hạn nộp</label>
+              <input class="input" id="fDue" type="datetime-local" required />
+            </div>
+            <div class="field">
+              <label class="field__label">Ưu tiên</label>
+              <div class="segmented" id="priorityButtons">
+                <button class="segmented__btn is-active" type="button" data-priority="low">Thấp</button>
+                <button class="segmented__btn" type="button" data-priority="medium">Vừa</button>
+                <button class="segmented__btn" type="button" data-priority="high">Cao</button>
+              </div>
+              <input type="hidden" id="fPriority" value="medium" />
+            </div>
+            <div class="field">
+              <label class="field__label" for="fDeadlineColor">Màu deadline</label>
+              <input class="input" id="fDeadlineColor" type="color" value="#ffcc66" />
+            </div>
+          </div>
+
+          <div class="grid grid--2" id="classFields" hidden>
+            <div class="field field--full">
+              <label class="field__label">Ngày trong tuần</label>
+              <div class="segmented segmented--days" id="dayButtons" role="group" aria-label="Ngày trong tuần">
+                <button class="segmented__btn" type="button" data-day="1">Thứ 2</button>
+                <button class="segmented__btn" type="button" data-day="2">Thứ 3</button>
+                <button class="segmented__btn" type="button" data-day="3">Thứ 4</button>
+                <button class="segmented__btn" type="button" data-day="4">Thứ 5</button>
+                <button class="segmented__btn" type="button" data-day="5">Thứ 6</button>
+                <button class="segmented__btn" type="button" data-day="6">Thứ 7</button>
+                <button class="segmented__btn" type="button" data-day="0">Chủ nhật</button>
+              </div>
+              <input type="hidden" id="fDay" value="1" />
+            </div>
+            <div class="field field--full">
+              <label class="field__label" for="fColor">Màu buổi học</label>
+              <input class="input" id="fColor" type="color" value="#6d5efc" />
+            </div>
+            <div class="field">
+              <label class="field__label" for="fStart">Bắt đầu</label>
+              <input class="input" id="fStart" type="time" required />
+            </div>
+            <div class="field">
+              <label class="field__label" for="fEnd">Kết thúc</label>
+              <input class="input" id="fEnd" type="time" required />
+            </div>
+            <div class="field">
+              <label class="field__label" for="fLocation">Phòng</label>
+              <input class="input" id="fLocation" placeholder="VD: A301" />
+            </div>
+            <div class="field">
+              <label class="field__label" for="fTeacher">Giảng viên</label>
+              <input class="input" id="fTeacher" placeholder="VD: Thầy/Cô ..." />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="fNotes">Ghi chú</label>
+            <textarea class="textarea" id="fNotes" rows="3" placeholder="Link tài liệu, yêu cầu nộp, v.v."></textarea>
+          </div>
+        </div>
+
+        <div class="modal__foot">
+          <div class="modal__left">
+            <button class="btn btn--ghost" id="deleteBtn" type="button" hidden>Xoá</button>
+          </div>
+          <div class="modal__right">
+            <button class="btn btn--ghost" id="cancelBtn" type="button">Huỷ</button>
+            <button class="btn btn--primary" id="saveBtn" type="submit">Lưu</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
