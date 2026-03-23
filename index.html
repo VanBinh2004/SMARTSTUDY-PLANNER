@@ -245,61 +245,97 @@
       </main>
     </div>
 
-    <!-- MODAL -->
-    <dialog class="modal" id="editorModal">
-      <form class="modal__inner" id="editorForm" method="dialog">
+    <!-- MODALS -->
+    <dialog class="modal" id="deadlineModal">
+      <form class="modal__inner" id="deadlineForm" method="dialog">
         <div class="modal__head">
           <div>
-            <div class="modal__title" id="modalTitle">Thêm</div>
-            <div class="modal__subtitle" id="modalSubtitle">Điền thông tin rồi bấm Lưu.</div>
+            <div class="modal__title" id="deadlineModalTitle">Thêm</div>
+            <div class="modal__subtitle" id="deadlineModalSubtitle">Điền thông tin rồi bấm Lưu.</div>
           </div>
-          <button class="iconBtn" type="button" id="closeModalBtn" aria-label="Đóng">✕</button>
+          <button class="iconBtn" type="button" id="deadlineCloseBtn" aria-label="Đóng">✕</button>
         </div>
 
-        <div class="chips" role="tablist" aria-label="Chọn loại">
-          <button class="chip is-active" type="button" data-kind="deadline">Deadline</button>
-          <button class="chip" type="button" data-kind="class">Buổi học</button>
-        </div>
-
-        <input type="hidden" id="editorKind" value="deadline" />
-        <input type="hidden" id="editorId" value="" />
+        <input type="hidden" id="deadlineEditorId" value="" />
 
         <div class="modal__body">
           <div class="grid grid--2">
             <div class="field">
-              <label class="field__label" for="fTitle">Tiêu đề</label>
-              <input class="input" id="fTitle" required placeholder="VD: Nộp báo cáo giữa kỳ" />
+              <label class="field__label" for="dTitle">Tiêu đề</label>
+              <input class="input" id="dTitle" required placeholder="VD: Nộp báo cáo giữa kỳ" />
             </div>
             <div class="field">
-              <label class="field__label" for="fCourse">Môn học</label>
-              <input class="input" id="fCourse" placeholder="VD: Cấu trúc dữ liệu" />
+              <label class="field__label" for="dCourse">Môn học</label>
+              <input class="input" id="dCourse" placeholder="VD: Cấu trúc dữ liệu" />
             </div>
           </div>
 
-          <div class="grid grid--2" id="deadlineFields">
+          <div class="grid grid--2">
             <div class="field">
-              <label class="field__label" for="fDue">Hạn nộp</label>
-              <input class="input" id="fDue" type="datetime-local" required />
+              <label class="field__label" for="dDue">Hạn nộp</label>
+              <input class="input" id="dDue" type="datetime-local" required />
             </div>
             <div class="field">
               <label class="field__label">Ưu tiên</label>
-              <div class="segmented" id="priorityButtons">
+              <div class="segmented" id="deadlinePriorityButtons">
                 <button class="segmented__btn is-active" type="button" data-priority="low">Thấp</button>
                 <button class="segmented__btn" type="button" data-priority="medium">Vừa</button>
                 <button class="segmented__btn" type="button" data-priority="high">Cao</button>
               </div>
-              <input type="hidden" id="fPriority" value="medium" />
+              <input type="hidden" id="dPriority" value="medium" />
             </div>
             <div class="field">
-              <label class="field__label" for="fDeadlineColor">Màu deadline</label>
-              <input class="input" id="fDeadlineColor" type="color" value="#ffcc66" />
+              <label class="field__label" for="dDeadlineColor">Màu deadline</label>
+              <input class="input" id="dDeadlineColor" type="color" value="#ffcc66" />
             </div>
           </div>
 
-          <div class="grid grid--2" id="classFields" hidden>
+          <div class="field">
+            <label class="field__label" for="dNotes">Ghi chú</label>
+            <textarea class="textarea" id="dNotes" rows="3" placeholder="Link tài liệu, yêu cầu nộp, v.v."></textarea>
+          </div>
+        </div>
+
+        <div class="modal__foot">
+          <div class="modal__left">
+            <button class="btn btn--ghost" id="deadlineDeleteBtn" type="button" hidden>Xoá</button>
+          </div>
+          <div class="modal__right">
+            <button class="btn btn--ghost" id="deadlineCancelBtn" type="button">Huỷ</button>
+            <button class="btn btn--primary" id="deadlineSaveBtn" type="submit">Lưu</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="classModal">
+      <form class="modal__inner" id="classForm" method="dialog">
+        <div class="modal__head">
+          <div>
+            <div class="modal__title" id="classModalTitle">Thêm</div>
+            <div class="modal__subtitle" id="classModalSubtitle">Điền thông tin rồi bấm Lưu.</div>
+          </div>
+          <button class="iconBtn" type="button" id="classCloseBtn" aria-label="Đóng">✕</button>
+        </div>
+
+        <input type="hidden" id="classEditorId" value="" />
+
+        <div class="modal__body">
+          <div class="grid grid--2">
+            <div class="field">
+              <label class="field__label" for="cTitle">Tiêu đề</label>
+              <input class="input" id="cTitle" required placeholder="VD: Nhóm học phần" />
+            </div>
+            <div class="field">
+              <label class="field__label" for="cCourse">Môn học</label>
+              <input class="input" id="cCourse" placeholder="VD: Toán rời rạc" />
+            </div>
+          </div>
+
+          <div class="grid grid--2">
             <div class="field field--full">
               <label class="field__label">Ngày trong tuần</label>
-              <div class="segmented segmented--days" id="dayButtons" role="group" aria-label="Ngày trong tuần">
+              <div class="segmented segmented--days" id="classDayButtons" role="group" aria-label="Ngày trong tuần">
                 <button class="segmented__btn" type="button" data-day="1">Thứ 2</button>
                 <button class="segmented__btn" type="button" data-day="2">Thứ 3</button>
                 <button class="segmented__btn" type="button" data-day="3">Thứ 4</button>
@@ -308,43 +344,45 @@
                 <button class="segmented__btn" type="button" data-day="6">Thứ 7</button>
                 <button class="segmented__btn" type="button" data-day="0">Chủ nhật</button>
               </div>
-              <input type="hidden" id="fDay" value="1" />
+              <input type="hidden" id="cDay" value="1" />
             </div>
             <div class="field field--full">
-              <label class="field__label" for="fColor">Màu buổi học</label>
-              <input class="input" id="fColor" type="color" value="#6d5efc" />
+              <label class="field__label" for="cColor">Màu buổi học</label>
+              <input class="input" id="cColor" type="color" value="#6d5efc" />
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="cStart">Bắt đầu</label>
+              <input class="input" id="cStart" type="time" required />
             </div>
             <div class="field">
-              <label class="field__label" for="fStart">Bắt đầu</label>
-              <input class="input" id="fStart" type="time" required />
+              <label class="field__label" for="cEnd">Kết thúc</label>
+              <input class="input" id="cEnd" type="time" required />
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="cLocation">Phòng</label>
+              <input class="input" id="cLocation" placeholder="VD: A301" />
             </div>
             <div class="field">
-              <label class="field__label" for="fEnd">Kết thúc</label>
-              <input class="input" id="fEnd" type="time" required />
-            </div>
-            <div class="field">
-              <label class="field__label" for="fLocation">Phòng</label>
-              <input class="input" id="fLocation" placeholder="VD: A301" />
-            </div>
-            <div class="field">
-              <label class="field__label" for="fTeacher">Giảng viên</label>
-              <input class="input" id="fTeacher" placeholder="VD: Thầy/Cô ..." />
+              <label class="field__label" for="cTeacher">Giảng viên</label>
+              <input class="input" id="cTeacher" placeholder="VD: Thầy/Cô ..." />
             </div>
           </div>
 
           <div class="field">
-            <label class="field__label" for="fNotes">Ghi chú</label>
-            <textarea class="textarea" id="fNotes" rows="3" placeholder="Link tài liệu, yêu cầu nộp, v.v."></textarea>
+            <label class="field__label" for="cNotes">Ghi chú</label>
+            <textarea class="textarea" id="cNotes" rows="3" placeholder="Link tài liệu, yêu cầu nộp, v.v."></textarea>
           </div>
         </div>
 
         <div class="modal__foot">
           <div class="modal__left">
-            <button class="btn btn--ghost" id="deleteBtn" type="button" hidden>Xoá</button>
+            <button class="btn btn--ghost" id="classDeleteBtn" type="button" hidden>Xoá</button>
           </div>
           <div class="modal__right">
-            <button class="btn btn--ghost" id="cancelBtn" type="button">Huỷ</button>
-            <button class="btn btn--primary" id="saveBtn" type="submit">Lưu</button>
+            <button class="btn btn--ghost" id="classCancelBtn" type="button">Huỷ</button>
+            <button class="btn btn--primary" id="classSaveBtn" type="submit">Lưu</button>
           </div>
         </div>
       </form>

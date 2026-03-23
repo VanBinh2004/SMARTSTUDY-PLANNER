@@ -213,35 +213,47 @@
   const elDayDetailList = qs("#dayDetailList");
   const elDayDetailEmpty = qs("#dayDetailEmpty");
 
-  // Modal/editor
-  const elModal = qs("#editorModal");
-  const elEditorForm = qs("#editorForm");
-  const elModalTitle = qs("#modalTitle");
-  const elModalSubtitle = qs("#modalSubtitle");
-  const elCloseModalBtn = qs("#closeModalBtn");
-  const elCancelBtn = qs("#cancelBtn");
-  const elSaveBtn = qs("#saveBtn");
-  const elDeleteBtn = qs("#deleteBtn");
-  const elKindChips = Array.from(document.querySelectorAll(".chip"));
-  const elEditorKind = qs("#editorKind");
-  const elEditorId = qs("#editorId");
-  const elDeadlineFields = qs("#deadlineFields");
-  const elClassFields = qs("#classFields");
-  const elPriorityButtons = Array.from(document.querySelectorAll("#priorityButtons .segmented__btn"));
-  const elDayButtons = Array.from(document.querySelectorAll("#dayButtons .segmented__btn"));
+  // Modals: Deadline / Class (2 popup riêng)
+  const elDeadlineModal = qs("#deadlineModal");
+  const elDeadlineForm = qs("#deadlineForm");
+  const elDeadlineModalTitle = qs("#deadlineModalTitle");
+  const elDeadlineModalSubtitle = qs("#deadlineModalSubtitle");
+  const elDeadlineCloseBtn = qs("#deadlineCloseBtn");
+  const elDeadlineCancelBtn = qs("#deadlineCancelBtn");
+  const elDeadlineSaveBtn = qs("#deadlineSaveBtn");
+  const elDeadlineDeleteBtn = qs("#deadlineDeleteBtn");
+  const elDeadlineEditorId = qs("#deadlineEditorId");
+  const elDeadlinePriorityButtons = Array.from(document.querySelectorAll("#deadlinePriorityButtons .segmented__btn"));
 
-  const fTitle = qs("#fTitle");
-  const fCourse = qs("#fCourse");
-  const fDue = qs("#fDue");
-  const fPriority = qs("#fPriority");
-  const fDeadlineColor = qs("#fDeadlineColor");
-  const fDay = qs("#fDay");
-  const fColor = qs("#fColor");
-  const fStart = qs("#fStart");
-  const fEnd = qs("#fEnd");
-  const fLocation = qs("#fLocation");
-  const fTeacher = qs("#fTeacher");
-  const fNotes = qs("#fNotes");
+  const elClassModal = qs("#classModal");
+  const elClassForm = qs("#classForm");
+  const elClassModalTitle = qs("#classModalTitle");
+  const elClassModalSubtitle = qs("#classModalSubtitle");
+  const elClassCloseBtn = qs("#classCloseBtn");
+  const elClassCancelBtn = qs("#classCancelBtn");
+  const elClassSaveBtn = qs("#classSaveBtn");
+  const elClassDeleteBtn = qs("#classDeleteBtn");
+  const elClassEditorId = qs("#classEditorId");
+  const elClassDayButtons = Array.from(document.querySelectorAll("#classDayButtons .segmented__btn"));
+
+  // Deadline fields
+  const dTitle = qs("#dTitle");
+  const dCourse = qs("#dCourse");
+  const dDue = qs("#dDue");
+  const dPriority = qs("#dPriority");
+  const dDeadlineColor = qs("#dDeadlineColor");
+  const dNotes = qs("#dNotes");
+
+  // Class fields
+  const cTitle = qs("#cTitle");
+  const cCourse = qs("#cCourse");
+  const cDay = qs("#cDay");
+  const cColor = qs("#cColor");
+  const cStart = qs("#cStart");
+  const cEnd = qs("#cEnd");
+  const cLocation = qs("#cLocation");
+  const cTeacher = qs("#cTeacher");
+  const cNotes = qs("#cNotes");
 
   let calendarCursor = startOfDay(new Date());
   calendarCursor.setDate(1);
@@ -272,16 +284,16 @@
 
   const setPriority = (p) => {
     const val = p === "high" || p === "low" ? p : "medium";
-    fPriority.value = val;
-    elPriorityButtons.forEach((btn) => {
+    dPriority.value = val;
+    elDeadlinePriorityButtons.forEach((btn) => {
       btn.classList.toggle("is-active", btn.dataset.priority === val);
     });
   };
 
   const setDay = (day) => {
     const d = clamp(Number(day), 0, 6);
-    fDay.value = String(d);
-    elDayButtons.forEach((btn) => {
+    cDay.value = String(d);
+    elClassDayButtons.forEach((btn) => {
       btn.classList.toggle("is-active", Number(btn.dataset.day) === d);
     });
   };
@@ -729,115 +741,131 @@
     renderCalendar();
   };
 
-  const openModal = (kind, id = "") => {
-    setEditorKind(kind);
-    elEditorId.value = id || "";
-    elDeleteBtn.hidden = !id;
+  const openDeadlineModal = (id = "") => {
+    // Close the other modal so native <select> dropdown won't be visually affected.
+    try { closeClassModal(); } catch { /* ignore */ }
 
-    if (kind === "deadline") {
-      elModalTitle.textContent = id ? "Sửa deadline" : "Thêm deadline";
-      elModalSubtitle.textContent = "Điền thông tin deadline rồi bấm Lưu.";
-    } else {
-      elModalTitle.textContent = id ? "Sửa buổi học" : "Thêm buổi học";
-      elModalSubtitle.textContent = "Điền thông tin buổi học rồi bấm Lưu.";
-    }
+    elDeadlineEditorId.value = id || "";
+    elDeadlineDeleteBtn.hidden = !id;
+
+    elDeadlineModalTitle.textContent = id ? "Sửa deadline" : "Thêm deadline";
+    elDeadlineModalSubtitle.textContent = "Điền thông tin deadline rồi bấm Lưu.";
 
     if (id) {
-      if (kind === "deadline") {
-        const d = state.deadlines.find((x) => x.id === id);
-        if (d) fillEditorFromDeadline(d);
-      } else {
-        const c = state.classes.find((x) => x.id === id);
-        if (c) fillEditorFromClass(c);
-      }
+      const d = state.deadlines.find((x) => x.id === id);
+      if (d) fillDeadlineEditorFromDeadline(d);
+      else clearDeadlineEditor();
     } else {
-      clearEditor(kind);
+      clearDeadlineEditor();
     }
 
-    if (typeof elModal.showModal === "function") elModal.showModal();
-    else elModal.setAttribute("open", "open");
+    if (typeof elDeadlineModal.showModal === "function") elDeadlineModal.showModal();
+    else elDeadlineModal.setAttribute("open", "open");
   };
 
-  const closeModal = () => {
-    if (typeof elModal.close === "function") elModal.close();
-    else elModal.removeAttribute("open");
+  const closeDeadlineModal = () => {
+    if (typeof elDeadlineModal.close === "function") elDeadlineModal.close();
+    else elDeadlineModal.removeAttribute("open");
   };
 
-  const setEditorKind = (kind) => {
-    elEditorKind.value = kind;
-    elKindChips.forEach((c) => c.classList.toggle("is-active", c.dataset.kind === kind));
-    const isDeadline = kind === "deadline";
-    elDeadlineFields.hidden = !isDeadline;
-    elClassFields.hidden = isDeadline;
-    fDue.required = isDeadline;
-    fStart.required = !isDeadline;
-    fEnd.required = !isDeadline;
+  const openClassModal = (id = "") => {
+    try { closeDeadlineModal(); } catch { /* ignore */ }
+
+    elClassEditorId.value = id || "";
+    elClassDeleteBtn.hidden = !id;
+
+    elClassModalTitle.textContent = id ? "Sửa buổi học" : "Thêm buổi học";
+    elClassModalSubtitle.textContent = "Điền thông tin buổi học rồi bấm Lưu.";
+
+    if (id) {
+      const c = state.classes.find((x) => x.id === id);
+      if (c) fillClassEditorFromClass(c);
+      else clearClassEditor();
+    } else {
+      clearClassEditor();
+    }
+
+    if (typeof elClassModal.showModal === "function") elClassModal.showModal();
+    else elClassModal.setAttribute("open", "open");
   };
 
-  const clearEditor = (kind) => {
-    elEditorId.value = "";
-    fTitle.value = "";
-    fCourse.value = "";
-    fNotes.value = "";
+  const closeClassModal = () => {
+    if (typeof elClassModal.close === "function") elClassModal.close();
+    else elClassModal.removeAttribute("open");
+  };
+
+  const clearDeadlineEditor = () => {
+    elDeadlineEditorId.value = "";
+    dTitle.value = "";
+    dCourse.value = "";
+    dNotes.value = "";
     setPriority("medium");
 
-    // Set sensible defaults
+    // Defaults for deadline
     const now = new Date();
     const dt = `${toISODate(now)}T${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
-    fDue.value = dt;
-    const dow = now.getDay();
-    const defaultDay = dow === 0 ? 0 : clamp(dow, 1, 6);
-    setDay(defaultDay);
-    fDeadlineColor.value = "#ffcc66";
-    fColor.value = "#6d5efc";
-    fStart.value = "07:30";
-    fEnd.value = "09:10";
-    fLocation.value = "";
-    fTeacher.value = "";
-
-    setEditorKind(kind);
+    dDue.value = dt;
+    dDeadlineColor.value = "#ffcc66";
   };
 
   /** @param {Deadline} d */
-  const fillEditorFromDeadline = (d) => {
-    setEditorKind("deadline");
-    fTitle.value = d.title || "";
-    fCourse.value = d.course || "";
-    fDue.value = d.dueLocal || "";
+  const fillDeadlineEditorFromDeadline = (d) => {
+    elDeadlineEditorId.value = d.id;
+    dTitle.value = d.title || "";
+    dCourse.value = d.course || "";
+    dDue.value = d.dueLocal || "";
     setPriority(d.priority || "medium");
-    fDeadlineColor.value = d.color || "#ffcc66";
-    fNotes.value = d.notes || "";
+    dDeadlineColor.value = d.color || "#ffcc66";
+    dNotes.value = d.notes || "";
+  };
+
+  const clearClassEditor = () => {
+    elClassEditorId.value = "";
+    cTitle.value = "";
+    cCourse.value = "";
+    cNotes.value = "";
+
+    // Defaults for class
+    const now = new Date();
+    const dow = now.getDay();
+    const defaultDay = dow === 0 ? 0 : clamp(dow, 1, 6);
+    setDay(defaultDay);
+    cColor.value = "#6d5efc";
+    cStart.value = "07:30";
+    cEnd.value = "09:10";
+    cLocation.value = "";
+    cTeacher.value = "";
   };
 
   /** @param {ClassItem} c */
-  const fillEditorFromClass = (c) => {
-    setEditorKind("class");
-    fTitle.value = c.title || "";
-    fCourse.value = c.course || "";
+  const fillClassEditorFromClass = (c) => {
+    elClassEditorId.value = c.id;
+    cTitle.value = c.title || "";
+    cCourse.value = c.course || "";
     setDay(c.day);
-    fColor.value = c.color || "#6d5efc";
-    fStart.value = c.start || "";
-    fEnd.value = c.end || "";
-    fLocation.value = c.location || "";
-    fTeacher.value = c.teacher || "";
-    fNotes.value = c.notes || "";
+    cColor.value = c.color || "#6d5efc";
+    cStart.value = c.start || "";
+    cEnd.value = c.end || "";
+    cLocation.value = c.location || "";
+    cTeacher.value = c.teacher || "";
+    cNotes.value = c.notes || "";
   };
 
   const upsertDeadlineFromForm = (id) => {
-    const title = safeText(fTitle.value);
-    const course = safeText(fCourse.value);
-    const dueLocal = safeText(fDue.value);
+    const title = safeText(dTitle.value);
+    const course = safeText(dCourse.value);
+    const dueLocal = safeText(dDue.value);
     const due = parseLocalDateTime(dueLocal);
     if (!title) throw new Error("Vui lòng nhập tiêu đề.");
     if (!due) throw new Error("Vui lòng chọn hạn nộp hợp lệ.");
 
-    const priority = fPriority.value === "high" || fPriority.value === "low" ? fPriority.value : "medium";
-    const color = safeText(fDeadlineColor.value) || "#ffcc66";
-    const notes = safeText(fNotes.value);
+    const priority = dPriority.value === "high" || dPriority.value === "low" ? dPriority.value : "medium";
+    const color = safeText(dDeadlineColor.value) || "#ffcc66";
+    const notes = safeText(dNotes.value);
     const now = Date.now();
 
     if (id) {
-      const idx = state.deadlines.findIndex((d) => d.id === id);
+      const idx = state.deadlines.findIndex((d0) => d0.id === id);
       if (idx >= 0) {
         const prev = state.deadlines[idx];
         state.deadlines[idx] = {
@@ -870,21 +898,21 @@
   };
 
   const upsertClassFromForm = (id) => {
-    const title = safeText(fTitle.value);
-    const course = safeText(fCourse.value);
-    const day = clamp(Number(fDay.value), 0, 6);
-    const color = safeText(fColor.value) || "#6d5efc";
-    const start = safeText(fStart.value);
-    const end = safeText(fEnd.value);
-    const location = safeText(fLocation.value);
-    const teacher = safeText(fTeacher.value);
-    const notes = safeText(fNotes.value);
+    const title = safeText(cTitle.value);
+    const course = safeText(cCourse.value);
+    const day = clamp(Number(cDay.value), 0, 6);
+    const color = safeText(cColor.value) || "#6d5efc";
+    const start = safeText(cStart.value);
+    const end = safeText(cEnd.value);
+    const location = safeText(cLocation.value);
+    const teacher = safeText(cTeacher.value);
+    const notes = safeText(cNotes.value);
     if (!title) throw new Error("Vui lòng nhập tiêu đề.");
     if (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end)) throw new Error("Giờ bắt đầu/kết thúc chưa hợp lệ.");
     const now = Date.now();
 
     if (id) {
-      const idx = state.classes.findIndex((c) => c.id === id);
+      const idx = state.classes.findIndex((c0) => c0.id === id);
       if (idx >= 0) {
         const prev = state.classes[idx];
         state.classes[idx] = {
@@ -920,17 +948,27 @@
     }
   };
 
-  const deleteByEditor = () => {
-    const id = safeText(elEditorId.value);
-    const kind = elEditorKind.value;
+  const deleteDeadlineByEditor = () => {
+    const id = safeText(elDeadlineEditorId.value);
     if (!id) return;
     // eslint-disable-next-line no-alert
-    const ok = confirm("Xoá mục này?");
+    const ok = confirm("Xoá deadline này?");
     if (!ok) return;
-    if (kind === "deadline") state.deadlines = state.deadlines.filter((d) => d.id !== id);
-    else state.classes = state.classes.filter((c) => c.id !== id);
+    state.deadlines = state.deadlines.filter((d) => d.id !== id);
     saveState(state);
-    closeModal();
+    closeDeadlineModal();
+    renderAll();
+  };
+
+  const deleteClassByEditor = () => {
+    const id = safeText(elClassEditorId.value);
+    if (!id) return;
+    // eslint-disable-next-line no-alert
+    const ok = confirm("Xoá buổi học này?");
+    if (!ok) return;
+    state.classes = state.classes.filter((c) => c.id !== id);
+    saveState(state);
+    closeClassModal();
     renderAll();
   };
 
@@ -977,25 +1015,25 @@
     renderAll();
   });
 
-  elQuickAddDeadlineBtn.addEventListener("click", () => openModal("deadline"));
-  elQuickAddClassBtn.addEventListener("click", () => openModal("class"));
-  elAddDeadlineBtn.addEventListener("click", () => openModal("deadline"));
-  elEmptyAddDeadlineBtn.addEventListener("click", () => openModal("deadline"));
-  elAddClassBtn.addEventListener("click", () => openModal("class"));
-  elEmptyAddClassBtn.addEventListener("click", () => openModal("class"));
+  elQuickAddDeadlineBtn.addEventListener("click", () => openDeadlineModal());
+  elQuickAddClassBtn.addEventListener("click", () => openClassModal());
+  elAddDeadlineBtn.addEventListener("click", () => openDeadlineModal());
+  elEmptyAddDeadlineBtn.addEventListener("click", () => openDeadlineModal());
+  elAddClassBtn.addEventListener("click", () => openClassModal());
+  elEmptyAddClassBtn.addEventListener("click", () => openClassModal());
 
   elDeadlineSearch.addEventListener("input", renderDeadlines);
   elDeadlineFilter.addEventListener("change", renderDeadlines);
   elDeadlineSort.addEventListener("change", renderDeadlines);
 
-  elPriorityButtons.forEach((btn) =>
+  elDeadlinePriorityButtons.forEach((btn) =>
     btn.addEventListener("click", () => {
       const p = btn.dataset.priority === "high" || btn.dataset.priority === "low" ? btn.dataset.priority : "medium";
       setPriority(p);
     })
   );
 
-  elDayButtons.forEach((btn) =>
+  elClassDayButtons.forEach((btn) =>
     btn.addEventListener("click", () => {
       const d = Number(btn.dataset.day);
       setDay(d);
@@ -1020,7 +1058,7 @@
     const id = item?.dataset.id;
     if (!id) return;
     const action = btn.dataset.action;
-    if (action === "edit") openModal("deadline", id);
+    if (action === "edit") openDeadlineModal(id);
     if (action === "toggleDone") toggleDone(id);
   });
 
@@ -1030,21 +1068,21 @@
     const item = btn.closest(".item");
     const id = item?.dataset.id;
     if (!id) return;
-    if (btn.dataset.action === "edit") openModal("class", id);
+    if (btn.dataset.action === "edit") openClassModal(id);
   });
 
   elDashDeadlinesList.addEventListener("click", (e) => {
     const btn = e.target instanceof HTMLElement ? e.target.closest("button[data-action]") : null;
     if (!btn) return;
     if (btn.dataset.action === "openDeadline") {
-      openModal("deadline", btn.dataset.id || "");
+      openDeadlineModal(btn.dataset.id || "");
     }
   });
 
   elDashTodayClassesList.addEventListener("click", (e) => {
     const btn = e.target instanceof HTMLElement ? e.target.closest("button[data-action]") : null;
     if (!btn) return;
-    if (btn.dataset.action === "openClass") openModal("class", btn.dataset.id || "");
+    if (btn.dataset.action === "openClass") openClassModal(btn.dataset.id || "");
   });
 
   elCalendarGrid.addEventListener("click", (e) => {
@@ -1059,8 +1097,8 @@
   elDayDetailList.addEventListener("click", (e) => {
     const btn = e.target instanceof HTMLElement ? e.target.closest("button[data-action]") : null;
     if (!btn) return;
-    if (btn.dataset.action === "openDeadline") openModal("deadline", btn.dataset.id || "");
-    if (btn.dataset.action === "openClass") openModal("class", btn.dataset.id || "");
+    if (btn.dataset.action === "openDeadline") openDeadlineModal(btn.dataset.id || "");
+    if (btn.dataset.action === "openClass") openClassModal(btn.dataset.id || "");
   });
 
   elCalPrevBtn.addEventListener("click", () => {
@@ -1078,26 +1116,34 @@
     renderCalendar();
   });
 
-  elKindChips.forEach((chip) =>
-    chip.addEventListener("click", () => {
-      const kind = chip.dataset.kind === "class" ? "class" : "deadline";
-      setEditorKind(kind);
-    })
-  );
+  elDeadlineCloseBtn.addEventListener("click", closeDeadlineModal);
+  elDeadlineCancelBtn.addEventListener("click", closeDeadlineModal);
+  elDeadlineDeleteBtn.addEventListener("click", deleteDeadlineByEditor);
 
-  elCloseModalBtn.addEventListener("click", closeModal);
-  elCancelBtn.addEventListener("click", closeModal);
-  elDeleteBtn.addEventListener("click", deleteByEditor);
+  elClassCloseBtn.addEventListener("click", closeClassModal);
+  elClassCancelBtn.addEventListener("click", closeClassModal);
+  elClassDeleteBtn.addEventListener("click", deleteClassByEditor);
 
-  elEditorForm.addEventListener("submit", (e) => {
+  elDeadlineForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const kind = elEditorKind.value === "class" ? "class" : "deadline";
-    const id = safeText(elEditorId.value);
+    const id = safeText(elDeadlineEditorId.value);
     try {
-      if (kind === "deadline") upsertDeadlineFromForm(id);
-      else upsertClassFromForm(id);
+      upsertDeadlineFromForm(id);
       saveState(state);
-      closeModal();
+      closeDeadlineModal();
+      renderAll();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Không thể lưu.");
+    }
+  });
+
+  elClassForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = safeText(elClassEditorId.value);
+    try {
+      upsertClassFromForm(id);
+      saveState(state);
+      closeClassModal();
       renderAll();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Không thể lưu.");
